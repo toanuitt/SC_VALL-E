@@ -47,13 +47,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("folder", type=Path)
     parser.add_argument("--suffix", type=str, default=".normalized.txt")
+    parser.add_argument("--out_dir", type=Path)
     args = parser.parse_args()
 
     paths = list(args.folder.rglob(f"*{args.suffix}"))
     random.shuffle(paths)
-
+    if args.out_dir:
+        args.out_dir.mkdir(parents=True, exist_ok=True)
+        
     for path in tqdm(paths):
-        phone_path = path.with_name(path.stem.split(".")[0] + ".phn.txt")
+        if args.out_dir:
+            phone_path = args.out_dir / path.relative_to(args.folder).with_name(path.stem.split(".")[0] + ".phn.txt")
+            phone_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure subdirectories exist
+        else:
+            phone_path = path.with_name(path.stem.split(".")[0] + ".phn.txt")
         if phone_path.exists():
             continue
         graphs = _get_graphs(path)
