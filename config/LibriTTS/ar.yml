@@ -1,4 +1,4 @@
-data_dirs: [data/LibriTTS/]
+data_dirs: ["/kaggle/working/checkpoint/train"]
 spkr_name_getter: "lambda p: p.parts[-3]"
 
 model: ar
