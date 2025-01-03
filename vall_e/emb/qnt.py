@@ -88,21 +88,29 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("folder", type=Path)
     parser.add_argument("--suffix", default=".wav")
+    parser.add_argument("--out_dir", type=Path)
     args = parser.parse_args()
+
+    args.out_dir.mkdir(parents=True, exist_ok=True)
 
     paths = [*args.folder.rglob(f"*{args.suffix}")]
     random.shuffle(paths)
     
     for path in tqdm(paths):   
-        out_path = _replace_file_extension(path, ".qnt.pt")
+        # Create the output file path inside the specified output directory
+        out_path = args.out_dir / _replace_file_extension(path.relative_to(args.folder), ".qnt.pt")
+        out_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure parent directories exist
+        
         if out_path.exists():
             continue
+        
         qnt = encode_from_file(path)
        
-        # wav 길이가 0인 경우 오류가 나기 떄문에 예외 처리
+        # Handle case of 0-length WAV file
         if qnt.cpu().size()[-1] == 0:
             print('0 length wav file : ', path)
             continue
+        
         torch.save(qnt.cpu(), out_path)
 
 if __name__ == "__main__":
