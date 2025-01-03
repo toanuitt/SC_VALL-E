@@ -8,8 +8,8 @@ import re
 
 import torch
 # from g2pk import G2p
-from vall_e.emb.G2P.KoG2Padvanced import KoG2Padvanced as G2p
-from vall_e.emb.G2P.KoG2P import KoG2P
+from SC_VALL-E.vall_e.emb.G2P.KoG2Padvanced import KoG2Padvanced as G2p
+from SC_VALL-E.vall_e.emb.G2P.KoG2P import KoG2P
 from tqdm import tqdm
 
 
