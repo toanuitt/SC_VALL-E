@@ -12,30 +12,43 @@ from .data import create_train_val_dataloader
 from .emb import qnt
 from .utils import setup_logging, to_device, trainer
 from .vall_e import get_model
+from vall_e.models import make_model  # Add this import
 
 _logger = logging.getLogger(__name__)
 
 
 def load_engines():
-    model = get_model(cfg.model)
-    ds_cfg = cfg.ds_cfg or {
-        "train_micro_batch_size_per_gpu": 4,
+    # Create DeepSpeed config
+    ds_config = {
+        "train_batch_size": config.batch_size,
+        "train_micro_batch_size_per_gpu": config.batch_size,
         "fp16": {
-            "enabled": False  # Disable FP16 if unsure about support
+            "enabled": True,
+            "initial_scale_power": 16
+        },
+        "optimizer": {
+            "type": "Adam",
+            "params": {
+                "lr": config.warmup_min_lr,
+                "betas": [0.9, 0.95],
+                "eps": 1e-8
+            }
+        },
+        "zero_optimization": {
+            "stage": 2
         }
     }
 
-    engines = dict(
-        model=trainer.Engine(
-            model=model,
-            config=cfg.ds_cfg,
-        ),
+    # Initialize model first
+    model = make_model(config)
+    
+    # Create engine with model and config
+    engine = trainer.Engine(
+        model=model,
+        config=ds_config
     )
-    # 임시    
-    engines = trainer.load_engines(engines, cfg)
-    # model = torch.load('/data/vall-e/ckpts_style/korean/nar/model/style/mp_rank_00_model_states_exported.pt')
-    # engines["model"] = model.to(torch.float32).to(cfg.device)
-    return engines
+
+    return Engines({"default": engine})
 
 
 def main():
@@ -157,10 +170,9 @@ def main():
     trainer.train(
         engines_loader=load_engines,
         train_dl=train_dl,
-        train_feeder=train_feeder,
-        eval_fn=eval_fn,
-        is_style_layer=True
-        # is_style_layer=False
+        val_dl=val_dl,
+        epochs=epochs,
+        log_dir=log_dir,
     )
 
 
