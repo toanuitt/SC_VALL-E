@@ -18,6 +18,12 @@ _logger = logging.getLogger(__name__)
 
 def load_engines():
     model = get_model(cfg.model)
+    ds_cfg = cfg.ds_cfg or {
+        "train_micro_batch_size_per_gpu": 4,
+        "fp16": {
+            "enabled": False  # Disable FP16 if unsure about support
+        }
+    }
 
     engines = dict(
         model=trainer.Engine(
