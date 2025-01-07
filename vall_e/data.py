@@ -39,7 +39,7 @@ def _load_quants(path) -> Tensor:
 
 @cache
 def _get_phones(path):
-    path = _replace_file_extension(path, ".phn.txt")
+    path = _replace_file_extension(path, ".normalized.phn.txt")
     with open(path, "r", encoding="utf8") as f:
         content = f.read()
     return ["<s>"] + content.split() + ["</s>"]
